@@ -331,6 +331,7 @@ contract TSwapPool is ERC20 {
      * @param inputToken ERC20 token to pull from caller
      * @param outputToken ERC20 token to send to caller
      * @param outputAmount The exact amount of tokens to send to caller
+     * @audit info-missing input param in natspec
      */
     function swapExactOutput(
         IERC20 inputToken,
