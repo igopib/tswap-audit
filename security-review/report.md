@@ -1,3 +1,120 @@
+---
+title: TSwap Audit Report
+author: Gopinho
+date: Dec 24, 2023
+header-includes:
+  - \usepackage{titling}
+  - \usepackage{graphicx}
+---
+
+\begin{titlepage}
+\centering
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{logo.pdf}
+\end{figure}
+\vspace{2cm}
+{\Huge\bfseries PuppyRaffle Audit Report\par}
+\vspace{1cm}
+{\Large Version 1.0\par}
+\vspace{2cm}
+{\Large\itshape profileos.vercel.app\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\maketitle
+
+<!-- Your report starts here! -->
+
+Prepared by: [Gurpreet](https://profileos.vercel.app)
+Lead Researcher:
+
+- Gurpreet
+
+# Table of Contents
+
+- [Table of Contents](#table-of-contents)
+- [Protocol Summary](#protocol-summary)
+- [Disclaimer](#disclaimer)
+- [Risk Classification](#risk-classification)
+- [Audit Details](#audit-details)
+  - [Scope](#scope)
+  - [Roles](#roles)
+- [Executive Summary](#executive-summary)
+  - [Issues found](#issues-found)
+- [Findings](#findings)
+  - [High](#high)
+    - [\[H-1\] Function `PuppyRaffle::refund` is vulnerable to reenteracy attacks.](#h-1-function-puppyrafflerefund-is-vulnerable-to-reenteracy-attacks)
+    - [\[H-2\] Function `PuppyRaffle::selectWinner` uses insecure ways of generating random winner for `winnerIndex`.](#h-2-function-puppyraffleselectwinner-uses-insecure-ways-of-generating-random-winner-for-winnerindex)
+    - [\[H-3\] Overflow and Underflow](#h-3-overflow-and-underflow)
+    - [\[H-4\] `PuppyRaffle::selectWinner` uses very unsafe require statement, which can lead to not being able to withdraw the fee.](#h-4-puppyraffleselectwinner-uses-very-unsafe-require-statement-which-can-lead-to-not-being-able-to-withdraw-the-fee)
+  - [Medium](#medium)
+    - [\[M-1\] Function `PuppyRaffle::enterRaffle` is exposed to DOS(Denial of service) attacks, looping through unchecked players array.](#m-1-function-puppyraffleenterraffle-is-exposed-to-dosdenial-of-service-attacks-looping-through-unchecked-players-array)
+  - [Informational](#informational)
+    - [\[I-1\] Solidity pragma should be specific, not wide](#i-1-solidity-pragma-should-be-specific-not-wide)
+    - [\[I-2\] Using outdated versions of Solidity is not recommended.](#i-2-using-outdated-versions-of-solidity-is-not-recommended)
+    - [\[I-3\] \_isActivePlayer is never used and should be removed](#i-3-_isactiveplayer-is-never-used-and-should-be-removed)
+    - [\[I-4\] Zero address may be erroneously considered an active player](#i-4-zero-address-may-be-erroneously-considered-an-active-player)
+  - [Gas](#gas)
+    - [\[G-1\] Unchanged variables should be constant or immutable](#g-1-unchanged-variables-should-be-constant-or-immutable)
+
+# Protocol Summary
+
+TSwap contracts allow users to provide liquidity for certain erc20 using weth as the pair.
+
+# Disclaimer
+
+The Gurpreet(gopinho) team makes all effort to find as many vulnerabilities in the code in the given time period, but holds no responsibilities for the findings provided in this document. A security audit by the team is not an endorsement of the underlying business or product. The audit was time-boxed and the review of the code was solely on the security aspects of the Solidity implementation of the contracts.
+
+# Risk Classification
+
+|            |        | Impact |        |     |
+| ---------- | ------ | ------ | ------ | --- |
+|            |        | High   | Medium | Low |
+|            | High   | H      | H/M    | M   |
+| Likelihood | Medium | H/M    | M      | M/L |
+|            | Low    | M      | M/L    | L   |
+
+We use the [CodeHawks](https://docs.codehawks.com/hawks-auditors/how-to-evaluate-a-finding-severity) severity matrix to determine severity. See the documentation for more details.
+
+# Audit Details
+
+**The findings in this documents corrosponds to the following commit hash**
+
+```
+f426f57731208727addc20adb72cb7f5bf29dc03
+```
+
+## Scope
+
+```
+src/PoolFactory.sol
+src/TSwapPool.sol
+```
+
+## Roles
+
+- Owner: Deployer of the contract, has power to change the address of to which fee is sent using `changeFeeAddress` function.
+
+- Player: Participant of the protocol, they enter the raffle through `enterRaffle` function and has ability to get a refund using `refund` function.
+
+# Executive Summary
+
+Manual review including foundry fuzz tests were expended on this contract.
+
+## Issues found
+
+| Severity | Number of issues |
+| -------- | ---------------- |
+| High     | 4                |
+| Medium   | 1                |
+| Info     | 2                |
+| Gas      | 3                |
+| Total    | 10               |
+
+# Findings
+
 ## High
 
 ### [H-1] Incorrect fee calculation in `TSwapPool::getInputAmountBasedOnOutput` method, fee calculation ends up being 93.5% instead of 0.3%.
