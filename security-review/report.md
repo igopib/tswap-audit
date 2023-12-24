@@ -93,15 +93,9 @@ src/PoolFactory.sol
 src/TSwapPool.sol
 ```
 
-## Roles
-
-- Owner: Deployer of the contract, has power to change the address of to which fee is sent using `changeFeeAddress` function.
-
-- Player: Participant of the protocol, they enter the raffle through `enterRaffle` function and has ability to get a refund using `refund` function.
-
 # Executive Summary
 
-Manual review including foundry fuzz tests were expended on this contract.
+Manual review including foundry fuzz,invariant tests were expended on this contract.
 
 ## Issues found
 
